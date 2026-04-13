@@ -2,7 +2,7 @@ const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 
-const BACKUP_DIR = path.resolve(process.env.BACKUP_DIR || './backups');
+const BACKUP_DIR = process.env.BACKUPS_DIR || path.resolve('./backups');
 const BACKUP_MAX = parseInt(process.env.BACKUP_MAX_COUNT) || 20;
 
 if (!fs.existsSync(BACKUP_DIR)) {

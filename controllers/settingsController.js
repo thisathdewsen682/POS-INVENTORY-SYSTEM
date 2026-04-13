@@ -1,6 +1,7 @@
 const SettingsModel = require('../models/settingsModel');
 const path = require('path');
 const fs = require('fs');
+const BackupScheduler = require('../services/backupScheduler');
 
 class SettingsController {
     static getIndex(req, res) {
@@ -10,7 +11,7 @@ class SettingsController {
 
     static postUpdate(req, res) {
         try {
-            const fields = ['shop_name', 'shop_address', 'shop_phone', 'invoice_header', 'invoice_footer', 'currency_symbol'];
+            const fields = ['shop_name', 'shop_address', 'shop_phone', 'invoice_header', 'invoice_footer', 'currency_symbol', 'auto_backup_time_1', 'auto_backup_time_2'];
             for (const field of fields) {
                 if (req.body[field] !== undefined) {
                     SettingsModel.set(field, req.body[field]);
@@ -23,11 +24,15 @@ class SettingsController {
                 SettingsModel.set('logo_path', logoPath);
             }
 
+            // Reload backup schedule immediately after saving new times
+            BackupScheduler.reload();
+
             res.redirect('/settings?success=Settings updated successfully');
         } catch (error) {
             console.error('Settings update error:', error);
             const settings = SettingsModel.getAll();
-            res.render('settings/index', { title: 'System Settings', settings, error: error.message });
+            const errorMessage = error.message.includes('cron') ? 'Failed to update backup schedule: ' + error.message : error.message;
+            res.render('settings/index', { title: 'System Settings', settings, error: errorMessage });
         }
     }
 

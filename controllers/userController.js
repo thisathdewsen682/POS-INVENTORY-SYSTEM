@@ -3,7 +3,7 @@ const UserModel = require('../models/userModel');
 class UserController {
     static getIndex(req, res) {
         const users = UserModel.getAll();
-        res.render('users/index', { title: 'User Management', users });
+        res.render('users/index', { title: 'User Management', users, error: req.query.error });
     }
 
     static getCreate(req, res) {
@@ -46,8 +46,18 @@ class UserController {
     static postDelete(req, res) {
         try {
             UserModel.delete(req.params.id);
+            res.redirect('/users');
         } catch (error) {
             console.error('Delete user error:', error.message);
+            res.redirect('/users?error=' + encodeURIComponent(error.message));
+        }
+    }
+
+    static postToggleStatus(req, res) {
+        try {
+            UserModel.toggleStatus(req.params.id);
+        } catch (error) {
+            console.error('Toggle status error:', error.message);
         }
         res.redirect('/users');
     }

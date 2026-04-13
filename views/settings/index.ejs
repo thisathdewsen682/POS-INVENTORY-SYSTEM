@@ -40,7 +40,21 @@
                         </div>
                     </div>
 
-                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2"><i class="bi bi-image me-2"></i>Shop Logo</h5>
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2 mt-4"><i class="bi bi-clock-history me-2"></i>Automated Backups</h5>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Daily Backup Time 1</label>
+                            <input type="time" name="auto_backup_time_1" class="form-control form-control-lg" value="<%= settings.auto_backup_time_1 || '' %>">
+                            <small class="text-muted">Leave blank to disable</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Daily Backup Time 2</label>
+                            <input type="time" name="auto_backup_time_2" class="form-control form-control-lg" value="<%= settings.auto_backup_time_2 || '' %>">
+                            <small class="text-muted">Leave blank to disable</small>
+                        </div>
+                    </div>
+
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2 mt-4"><i class="bi bi-image me-2"></i>Shop Logo</h5>
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
                             <% if (settings.logo_path) { %>
@@ -64,9 +78,24 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top border-secondary">
-                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-check-circle me-1"></i>Save Settings</button>
+                        <button type="submit" id="saveSettingsBtn" class="btn btn-primary rounded-pill px-5 shadow-sm">
+                            <span id="saveBtnText"><i class="bi bi-check-circle me-1"></i>Save Settings</span>
+                            <span id="saveBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </form>
+
+                <script>
+                    document.querySelector('form[action="/settings/update"]').addEventListener('submit', function() {
+                        const btn = document.getElementById('saveSettingsBtn');
+                        const text = document.getElementById('saveBtnText');
+                        const spinner = document.getElementById('saveBtnSpinner');
+                        
+                        btn.disabled = true;
+                        text.classList.add('d-none');
+                        spinner.classList.remove('d-none');
+                    });
+                </script>
             </div>
         </div>
     </div>

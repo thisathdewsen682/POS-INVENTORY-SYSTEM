@@ -78,4 +78,8 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 
+// Initialize Scheduled Backups
+const BackupScheduler = require('./services/backupScheduler');
+BackupScheduler.init();
+
 module.exports = app;
