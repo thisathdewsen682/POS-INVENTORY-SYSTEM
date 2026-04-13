@@ -1,0 +1,127 @@
+<%- include('../partials/header') %>
+
+<!-- Date Range Filters -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="/reports" class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label text-muted small">Quick Select</label>
+                <select name="preset" class="form-select" onchange="this.form.submit()">
+                    <option value="today" <%= preset === 'today' ? 'selected' : '' %>>Today</option>
+                    <option value="this_week" <%= preset === 'this_week' ? 'selected' : '' %>>This Week</option>
+                    <option value="this_month" <%= preset === 'this_month' ? 'selected' : '' %>>This Month</option>
+                    <option value="this_year" <%= preset === 'this_year' ? 'selected' : '' %>>This Year</option>
+                    <option value="custom" <%= preset === 'custom' ? 'selected' : '' %>>Custom Range</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Start Date</label>
+                <input type="date" name="start" class="form-control" value="<%= startDate %>">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">End Date</label>
+                <input type="date" name="end" class="form-control" value="<%= endDate %>">
+            </div>
+            <div class="col-md-2">
+                <input type="hidden" name="preset" value="custom">
+                <button type="submit" class="btn btn-primary w-100 rounded-pill"><i class="bi bi-search me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+            <div class="card-body p-4">
+                <p class="text-muted mb-1 text-uppercase small fw-semibold">Total Sales</p>
+                <h2 class="mb-0 fw-bold"><%= totalSalesCount %></h2>
+            </div>
+            <div class="position-absolute bottom-0 start-0 w-100 bg-info" style="height: 4px;"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+            <div class="card-body p-4">
+                <p class="text-muted mb-1 text-uppercase small fw-semibold">Total Revenue</p>
+                <h2 class="mb-0 text-success fw-bold"><%= currencySymbol %><%= totalRevenue.toFixed(2) %></h2>
+            </div>
+            <div class="position-absolute bottom-0 start-0 w-100 bg-success" style="height: 4px;"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+            <div class="card-body p-4">
+                <p class="text-muted mb-1 text-uppercase small fw-semibold">Total Cost</p>
+                <h2 class="mb-0 text-warning fw-bold"><%= currencySymbol %><%= totalCost.toFixed(2) %></h2>
+            </div>
+            <div class="position-absolute bottom-0 start-0 w-100 bg-warning" style="height: 4px;"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+            <div class="card-body p-4">
+                <p class="text-muted mb-1 text-uppercase small fw-semibold">Net Profit</p>
+                <h2 class="mb-0 <%= totalProfit >= 0 ? 'text-success' : 'text-danger' %> fw-bold"><%= currencySymbol %><%= totalProfit.toFixed(2) %></h2>
+            </div>
+            <div class="position-absolute bottom-0 start-0 w-100 <%= totalProfit >= 0 ? 'bg-success' : 'bg-danger' %>" style="height: 4px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Product-wise Breakdown -->
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-transparent border-secondary py-3">
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-bar-chart me-2"></i>Product-wise Breakdown (<%= startDate %> to <%= endDate %>)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Category</th>
+                        <th class="text-end">Cost Price</th>
+                        <th class="text-end">Sell Price</th>
+                        <th class="text-center">Qty Sold</th>
+                        <th class="text-end">Revenue</th>
+                        <th class="text-end">Cost</th>
+                        <th class="text-end pe-4">Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (reportData.length === 0) { %>
+                        <tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>No sales data for this period.</td></tr>
+                    <% } %>
+                    <% reportData.forEach(function(row) { %>
+                    <tr>
+                        <td class="ps-4 fw-medium"><%= row.product_name %></td>
+                        <td><span class="badge bg-secondary"><%= row.category_name %></span></td>
+                        <td class="text-end"><%= currencySymbol %><%= (row.cost_price || 0).toFixed(2) %></td>
+                        <td class="text-end"><%= currencySymbol %><%= (row.selling_price || 0).toFixed(2) %></td>
+                        <td class="text-center"><span class="badge bg-info rounded-pill px-3"><%= row.total_qty_sold %></span></td>
+                        <td class="text-end text-success fw-bold"><%= currencySymbol %><%= (row.total_revenue || 0).toFixed(2) %></td>
+                        <td class="text-end text-warning"><%= currencySymbol %><%= (row.total_cost || 0).toFixed(2) %></td>
+                        <td class="text-end pe-4 fw-bold <%= (row.total_profit || 0) >= 0 ? 'text-success' : 'text-danger' %>">
+                            <%= currencySymbol %><%= (row.total_profit || 0).toFixed(2) %>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+                <% if (reportData.length > 0) { %>
+                <tfoot>
+                    <tr class="fw-bold border-top border-secondary">
+                        <td class="ps-4" colspan="5">TOTALS</td>
+                        <td class="text-end text-success"><%= currencySymbol %><%= totalRevenue.toFixed(2) %></td>
+                        <td class="text-end text-warning"><%= currencySymbol %><%= totalCost.toFixed(2) %></td>
+                        <td class="text-end pe-4 <%= totalProfit >= 0 ? 'text-success' : 'text-danger' %>"><%= currencySymbol %><%= totalProfit.toFixed(2) %></td>
+                    </tr>
+                </tfoot>
+                <% } %>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

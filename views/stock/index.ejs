@@ -1,0 +1,105 @@
+<%- include('../partials/header') %>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-lg rounded-4 h-100">
+            <div class="card-header border-bottom border-secondary bg-transparent py-3">
+                <h5 class="mb-0 fw-semibold"><i class="bi bi-arrow-left-right me-2"></i>Update Stock</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="/stock/update" method="POST">
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Select Product</label>
+                        <select name="product_id" id="product_id" class="form-select form-select-lg" required>
+                            <option value="">-- Choose Product --</option>
+                            <% products.forEach(p => { %>
+                                <option value="<%= p.id %>" data-stock="<%= p.stock_quantity %>"><%= p.name %> (Current: <%= p.stock_quantity %>)</option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Action</label>
+                        <select name="action_type" id="action_type" class="form-select form-select-lg" required>
+                            <option value="restock">Add Stock (+)</option>
+                            <option value="set">Manual Adjust (=)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted" id="qty_label">Quantity to Add</label>
+                        <input type="number" name="quantity" class="form-control form-control-lg" required min="0">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Reference / Reason</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. PO-1234, Damaged Item">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow"><i class="bi bi-check-circle me-1"></i>Update Inventory</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header border-bottom border-secondary bg-transparent py-3">
+                <h5 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2"></i>Recent Stock Logs</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-hover table-dark mb-0 align-middle">
+                        <thead class="sticky-top bg-dark">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Product</th>
+                                <th>Type</th>
+                                <th>Qty Change</th>
+                                <th class="pe-4">Ref</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if(logs.length === 0) { %>
+                                <tr><td colspan="5" class="text-center py-4 text-muted">No stock logs found.</td></tr>
+                            <% } %>
+                            <% logs.forEach(log => { %>
+                            <tr>
+                                <td class="ps-4 text-muted"><small><%= new Date(log.date).toLocaleString() %></small></td>
+                                <td class="fw-medium"><%= log.product_name %></td>
+                                <td>
+                                    <% if(log.change_type === 'RESTOCK') { %>
+                                        <span class="badge bg-success">Restock</span>
+                                    <% } else if(log.change_type === 'SALE') { %>
+                                        <span class="badge bg-info">Sale</span>
+                                    <% } else { %>
+                                        <span class="badge bg-warning text-dark">Adjust</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="<%= log.quantity > 0 ? 'text-success' : 'text-danger' %> fw-bold">
+                                        <%= log.quantity > 0 ? '+' : '' %><%= log.quantity %>
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-muted small"><%= log.reference_id || '-' %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('action_type').addEventListener('change', function(e) {
+        if(e.target.value === 'restock') {
+            document.getElementById('qty_label').innerText = 'Quantity to Add';
+        } else {
+            document.getElementById('qty_label').innerText = 'New Total Quantity';
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

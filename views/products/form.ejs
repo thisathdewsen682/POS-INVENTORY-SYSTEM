@@ -1,0 +1,73 @@
+<%- include('../partials/header') %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg rounded-4">
+            <div class="card-header border-bottom border-secondary bg-transparent py-3 text-center">
+                <h4 class="mb-0 fw-semibold"><i class="bi bi-box me-2"></i><%= title %></h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form action="<%= product && product.id ? '/products/edit/' + product.id : '/products/create' %>" method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Product Name</label>
+                            <input type="text" name="name" class="form-control form-control-lg" required value="<%= product ? product.name : '' %>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Category</label>
+                            <select name="category_id" class="form-select form-select-lg" required>
+                                <option value="">Select Category</option>
+                                <% categories.forEach(c => { %>
+                                    <option value="<%= c.id %>" <%= product && product.category_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted">Cost Price ($)</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-cash-stack"></i></span>
+                                <input type="number" step="0.01" name="cost_price" class="form-control" value="<%= product ? (product.cost_price || 0) : '' %>" placeholder="Purchase cost">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted">Selling Price ($)</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <input type="number" step="0.01" name="price" class="form-control" required value="<%= product ? product.price : '' %>">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted">Warranty (Months)</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+                                <input type="number" name="warranty_months" class="form-control" value="<%= product ? product.warranty_months : 0 %>">
+                            </div>
+                        </div>
+                        
+                        <% if (!product || !product.id) { %>
+                        <div class="col-md-12">
+                            <label class="form-label text-muted">Initial Stock Quantity</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-boxes"></i></span>
+                                <input type="number" name="stock_quantity" class="form-control" value="<%= product ? product.stock_quantity : 0 %>">
+                            </div>
+                        </div>
+                        <% } %>
+
+                        <div class="col-12">
+                            <label class="form-label text-muted">Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="3"><%= product ? (product.remarks || '') : '' %></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top border-secondary">
+                        <a href="/products" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-check-circle me-1"></i>Save Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

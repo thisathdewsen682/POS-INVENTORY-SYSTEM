@@ -1,0 +1,75 @@
+<%- include('../partials/header') %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg rounded-4">
+            <div class="card-header border-bottom border-secondary bg-transparent py-3 text-center">
+                <h4 class="mb-0 fw-semibold"><i class="bi bi-gear me-2"></i>System Settings</h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form action="/settings/update" method="POST" enctype="multipart/form-data">
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2"><i class="bi bi-shop me-2"></i>Shop Details</h5>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Shop Name</label>
+                            <input type="text" name="shop_name" class="form-control form-control-lg" value="<%= settings.shop_name || '' %>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Phone</label>
+                            <input type="text" name="shop_phone" class="form-control form-control-lg" value="<%= settings.shop_phone || '' %>">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted">Address</label>
+                            <textarea name="shop_address" class="form-control" rows="2"><%= settings.shop_address || '' %></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Currency Symbol</label>
+                            <input type="text" name="currency_symbol" class="form-control" value="<%= settings.currency_symbol || '$' %>" maxlength="5">
+                        </div>
+                    </div>
+
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2"><i class="bi bi-receipt me-2"></i>Invoice Customization</h5>
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <label class="form-label text-muted">Invoice Header Text</label>
+                            <input type="text" name="invoice_header" class="form-control" value="<%= settings.invoice_header || '' %>" placeholder="Text shown below shop name on invoice">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted">Invoice Footer Text</label>
+                            <input type="text" name="invoice_footer" class="form-control" value="<%= settings.invoice_footer || '' %>" placeholder="Text shown at the bottom of invoice">
+                        </div>
+                    </div>
+
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2"><i class="bi bi-image me-2"></i>Shop Logo</h5>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <% if (settings.logo_path) { %>
+                                <div class="mb-3 p-3 border border-secondary rounded text-center">
+                                    <img src="<%= settings.logo_path %>" alt="Current Logo" style="max-height: 80px;">
+                                    <div class="mt-2">
+                                        <form action="/settings/remove-logo" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill"><i class="bi bi-trash me-1"></i>Remove Logo</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <p class="text-muted"><i class="bi bi-info-circle me-1"></i>No logo uploaded yet.</p>
+                            <% } %>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Upload New Logo</label>
+                            <input type="file" name="logo" class="form-control" accept="image/*">
+                            <small class="text-muted">Max 2MB. PNG, JPG, SVG, WebP.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top border-secondary">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-check-circle me-1"></i>Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

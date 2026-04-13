@@ -1,0 +1,66 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 fw-bold">Current Stock</h2>
+    <div class="input-group" style="max-width: 300px;">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" id="stock-search" class="form-control" placeholder="Search products...">
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle" id="stock-table">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Code</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th class="text-end">Price</th>
+                        <th class="text-center">Stock Qty</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if(products.length === 0) { %>
+                        <tr><td colspan="6" class="text-center py-4 text-muted">No products found.</td></tr>
+                    <% } %>
+                    <% products.forEach(function(p) { %>
+                    <tr class="stock-row">
+                        <td class="ps-4 text-muted">#<%= String(p.id).padStart(4, '0') %></td>
+                        <td class="fw-medium"><%= p.name %></td>
+                        <td><span class="badge bg-secondary"><%= p.category_name %></span></td>
+                        <td class="text-end"><%= currencySymbol %><%= p.price.toFixed(2) %></td>
+                        <td class="text-center">
+                            <span class="badge fs-6 px-3 py-2 rounded-pill <%= p.stock_quantity <= 0 ? 'bg-dark text-danger' : p.stock_quantity <= 5 ? 'bg-danger' : p.stock_quantity <= 15 ? 'bg-warning text-dark' : 'bg-success' %>">
+                                <%= p.stock_quantity %>
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <% if (p.stock_quantity <= 0) { %>
+                                <span class="text-danger fw-bold"><i class="bi bi-x-circle me-1"></i>Out of Stock</span>
+                            <% } else if (p.stock_quantity <= 5) { %>
+                                <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Low</span>
+                            <% } else { %>
+                                <span class="text-success"><i class="bi bi-check-circle me-1"></i>In Stock</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
+<script>
+$('#stock-search').on('input', function() {
+    var q = $(this).val().toLowerCase();
+    $('#stock-table tbody tr.stock-row').each(function() {
+        var text = $(this).text().toLowerCase();
+        $(this).toggle(text.indexOf(q) !== -1);
+    });
+});
+</script>

@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/sales" class="btn btn-outline-secondary rounded-pill px-3 me-3"><i class="bi bi-arrow-left"></i> Back</a>
+    <h2 class="mb-0 fw-bold">Sale Detail <span class="text-primary">#<%= sale.invoice_number %></span></h2>
+    <div class="ms-auto">
+        <a href="/invoices/print/<%= sale.id %>" target="_blank" class="btn btn-primary rounded-pill px-4 shadow-sm"><i class="bi bi-printer me-2"></i>Print Invoice</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-secondary shadow-sm bg-dark">
+            <div class="card-header bg-transparent border-secondary text-primary fw-bold"><i class="bi bi-info-circle me-2"></i>Invoice Info</div>
+            <ul class="list-group list-group-flush text-light">
+                <li class="list-group-item bg-transparent border-secondary d-flex justify-content-between">
+                    <span class="text-muted">Date</span>
+                    <strong><%= new Date(sale.date).toLocaleString() %></strong>
+                </li>
+                <li class="list-group-item bg-transparent border-secondary d-flex justify-content-between">
+                    <span class="text-muted">Staff</span>
+                    <strong><%= sale.staff_name %></strong>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card border-secondary shadow-sm bg-dark mt-4">
+            <div class="card-header bg-transparent border-secondary text-success fw-bold"><i class="bi bi-cash me-2"></i>Summary</div>
+            <ul class="list-group list-group-flush text-light">
+                <li class="list-group-item bg-transparent border-secondary d-flex justify-content-between">
+                    <span class="text-muted">Subtotal</span>
+                    <span>$<%= sale.subtotal.toFixed(2) %></span>
+                </li>
+                <li class="list-group-item bg-transparent border-secondary d-flex justify-content-between">
+                    <span class="text-muted">Discount</span>
+                    <span class="text-danger">-$<%= sale.discount.toFixed(2) %></span>
+                </li>
+                <li class="list-group-item bg-transparent border-secondary d-flex justify-content-between fs-5">
+                    <span class="text-muted">Total</span>
+                    <strong class="text-success">$<%= sale.total.toFixed(2) %></strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card border-secondary shadow-sm bg-dark h-100">
+            <div class="card-header bg-transparent border-secondary text-warning fw-bold"><i class="bi bi-list-check me-2"></i>Items</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Product Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Warranty</th>
+                                <th class="text-end pe-4">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% sale.items.forEach(item => { %>
+                            <tr>
+                                <td class="ps-4 fw-medium"><%= item.product_name %></td>
+                                <td><span class="badge bg-secondary"><%= item.category_name %></span></td>
+                                <td>$<%= item.price.toFixed(2) %></td>
+                                <td><%= item.quantity %></td>
+                                <td><%= item.warranty_months %> Mo</td>
+                                <td class="text-end pe-4 fw-bold">$<%= item.total.toFixed(2) %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,78 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 fw-bold">Database Backups</h2>
+    <form action="/backup/create" method="POST" class="d-inline">
+        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm"><i class="bi bi-download me-2"></i>Create Backup Now</button>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-dark mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Filename</th>
+                        <th>Created Date</th>
+                        <th>File Size</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if(backups.length === 0) { %>
+                        <tr><td colspan="4" class="text-center py-4 text-muted">No backups found.</td></tr>
+                    <% } %>
+                    <% backups.forEach(backup => { %>
+                    <tr>
+                        <td class="ps-4 fw-medium text-info"><i class="bi bi-file-earmark-code me-2"></i><%= backup.filename %></td>
+                        <td class="text-muted"><%= new Date(backup.date).toLocaleString() %></td>
+                        <td><span class="badge bg-secondary"><%= backup.size %></span></td>
+                        <td class="text-end pe-4">
+                            <a href="/backup/download/<%= backup.filename %>" class="btn btn-sm btn-outline-success rounded-pill px-3 me-2"><i class="bi bi-cloud-download"></i> DL</a>
+                            
+                            <!-- Restore button triggers modal -->
+                            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 me-2" data-bs-toggle="modal" data-bs-target="#restoreModal_<%= backup.filename.replace(/\./g, '') %>">
+                                <i class="bi bi-bootstrap-reboot"></i> Restore
+                            </button>
+
+                            <!-- Delete form -->
+                            <form action="/backup/delete" method="POST" class="d-inline" onsubmit="return confirm('WARNING: This will permanently delete this backup file. Are you sure?');">
+                                <input type="hidden" name="filename" value="<%= backup.filename %>">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <!-- Restore Modal -->
+                    <div class="modal fade" id="restoreModal_<%= backup.filename.replace(/\./g, '') %>" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content bg-dark text-light border-secondary">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Critical Action</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>You are about to restore the database to the state of this backup:</p>
+                                    <p class="font-monospace text-info bg-secondary bg-opacity-25 p-2 rounded"><%= backup.filename %></p>
+                                    <p class="text-danger fw-bold mb-0">WARNING: All data added after this backup will be permanently lost.</p>
+                                    <p class="small text-muted mt-2">The server will automatically restart after restoration is complete.</p>
+                                </div>
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="/backup/restore" method="POST">
+                                        <input type="hidden" name="filename" value="<%= backup.filename %>">
+                                        <button type="submit" class="btn btn-danger">Yes, Replace Database</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #<%= sale.invoice_number %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #fff; color: #333; font-size: 14px; }
+        .invoice-box { max-width: 800px; margin: 20px auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,.15); }
+        .invoice-box table { width: 100%; border-collapse: collapse; }
+        .invoice-box table td, .invoice-box table th { padding: 8px; }
+        .items-table th { background: #f0f0f0; border-bottom: 2px solid #ddd; font-size: 0.9em; text-transform: uppercase; }
+        .items-table td { border-bottom: 1px solid #eee; }
+        .total-row td { border-top: 2px solid #333; font-weight: bold; font-size: 1.1em; }
+        @media print {
+            body { font-size: 12pt; }
+            .invoice-box { box-shadow: none; border: 0; padding: 0; max-width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center my-3 no-print">
+        <button onclick="window.print()" class="btn btn-primary px-5 py-2"><i class="bi bi-printer me-2"></i>Print Invoice</button>
+        <a href="/sales" class="btn btn-secondary px-4 py-2 ms-2">Back to Sales</a>
+    </div>
+    
+    <div class="invoice-box">
+        <!-- Header -->
+        <table>
+            <tr>
+                <td style="width: 60%;">
+                    <% if (logoPath) { %>
+                        <img src="<%= logoPath %>" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"><br>
+                    <% } %>
+                    <h2 style="margin: 0; color: #333;"><%= shopName %></h2>
+                    <p style="margin: 5px 0; color: #777;"><%= shopAddress %></p>
+                    <p style="margin: 0; color: #777;">Phone: <%= shopPhone %></p>
+                </td>
+                <td style="text-align: right;">
+                    <h3 style="margin: 0; color: #555;">INVOICE</h3>
+                    <p style="margin: 5px 0;"><strong>No:</strong> <%= sale.invoice_number %></p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> <%= new Date(sale.date).toLocaleDateString() %></p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> <%= new Date(sale.date).toLocaleTimeString() %></p>
+                    <p style="margin: 5px 0;"><strong>Staff:</strong> <%= sale.staff_name %></p>
+                </td>
+            </tr>
+        </table>
+
+        <% if (invoiceHeader) { %>
+            <p style="text-align: center; margin: 15px 0 5px; color: #555; font-style: italic;"><%= invoiceHeader %></p>
+        <% } %>
+
+        <hr style="border-top: 2px solid #333;">
+
+        <!-- Items -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">Item</th>
+                    <th>Category</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: right;">Disc</th>
+                    <th style="text-align: right;">Total</th>
+                    <th style="text-align: center;">Warranty</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% sale.items.forEach(function(item) { %>
+                <tr>
+                    <td><%= item.product_name %></td>
+                    <td><%= item.category_name %></td>
+                    <td style="text-align: center;"><%= item.quantity %></td>
+                    <td style="text-align: right;"><%= currencySymbol %><%= item.price.toFixed(2) %></td>
+                    <td style="text-align: right;"><%= item.discount > 0 ? currencySymbol + item.discount.toFixed(2) : '-' %></td>
+                    <td style="text-align: right;"><%= currencySymbol %><%= item.total.toFixed(2) %></td>
+                    <td style="text-align: center;">
+                        <% if (item.warranty_end && item.warranty_end !== 'N/A') { %>
+                            Until <%= item.warranty_end %>
+                        <% } else { %>
+                            -
+                        <% } %>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Totals -->
+        <table style="width: 300px; margin-left: auto;">
+            <tr>
+                <td style="padding: 4px 8px; color: #777;">Subtotal:</td>
+                <td style="text-align: right; padding: 4px 8px;"><%= currencySymbol %><%= sale.subtotal.toFixed(2) %></td>
+            </tr>
+            <% if (sale.discount > 0) { %>
+            <tr>
+                <td style="padding: 4px 8px; color: #c00;">Discount<%= sale.discount_type === 'percent' ? ' (%)' : '' %>:</td>
+                <td style="text-align: right; padding: 4px 8px; color: #c00;">-<%= currencySymbol %><%= sale.discount.toFixed(2) %></td>
+            </tr>
+            <% } %>
+            <tr class="total-row">
+                <td style="padding: 8px; font-size: 1.2em;">TOTAL:</td>
+                <td style="text-align: right; padding: 8px; font-size: 1.2em;"><%= currencySymbol %><%= sale.total.toFixed(2) %></td>
+            </tr>
+        </table>
+
+        <!-- Footer -->
+        <div style="margin-top: 40px; text-align: center; color: #999; font-size: 0.85em;">
+            <% if (invoiceFooter) { %>
+                <p><%= invoiceFooter %></p>
+            <% } else { %>
+                <p>Thank you for your purchase!</p>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>
