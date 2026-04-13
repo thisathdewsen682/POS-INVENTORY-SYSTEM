@@ -12,14 +12,20 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Setup dynamic paths for Electron AppData or default fallback
+const uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'uploads');
+const sessionsDir = process.env.SESSION_DB_PATH ? path.dirname(process.env.SESSION_DB_PATH) : './';
+const sessionsDb = process.env.SESSION_DB_PATH ? path.basename(process.env.SESSION_DB_PATH) : 'sessions.sqlite';
+
 // Middlewares
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(uploadsDir)); // Mount uploads folder explicitly
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Session setup
 app.use(session({
-    store: new SQLiteStore({ dir: './', db: 'sessions.sqlite' }),
+    store: new SQLiteStore({ dir: sessionsDir, db: sessionsDb }),
     secret: process.env.SESSION_SECRET || 'fallback_secret',
     resave: false,
     saveUninitialized: false,
@@ -59,6 +65,7 @@ app.use('/backup', require('./routes/backupRoutes'));
 app.use('/users', require('./routes/userRoutes'));
 app.use('/settings', require('./routes/settingsRoutes'));
 app.use('/reports', require('./routes/reportRoutes'));
+app.use('/support', require('./routes/supportRoutes'));
 
 // 404 Handler
 app.use((req, res) => {

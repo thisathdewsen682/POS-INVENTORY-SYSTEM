@@ -1,0 +1,69 @@
+<%- include('../partials/header') %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="bg-primary bg-gradient p-5 text-center text-white">
+                <i class="bi bi-headset display-1 mb-3"></i>
+                <h2 class="fw-bold mb-1">Help & Support</h2>
+                <p class="mb-0 opacity-75">We are here to help you with your system.</p>
+            </div>
+            <div class="card-body p-5">
+                
+                <h4 class="fw-semibold mb-4 text-center border-bottom pb-3">Contact Developer</h4>
+                
+                <div class="row g-4 text-center mb-5">
+                    <div class="col-md-6">
+                        <div class="p-4 bg-light rounded-4 h-100 border border-secondary">
+                            <i class="bi bi-envelope-fill text-primary fs-1 mb-3 d-block"></i>
+                            <h5 class="fw-bold">Email Support</h5>
+                            <p class="text-muted mb-2">Send us your queries anytime.</p>
+                            <a href="mailto:thisathdwsen77@gmail.com" class="fs-5 text-decoration-none">thisathdwsen77@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-4 bg-light rounded-4 h-100 border border-secondary">
+                            <i class="bi bi-telephone-fill text-success fs-1 mb-3 d-block"></i>
+                            <h5 class="fw-bold">Phone Support</h5>
+                            <p class="text-muted mb-2">Call us directly during business hours.</p>
+                            <a href="tel:0788777150" class="fs-5 text-decoration-none text-success">0788777150</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion" id="supportAccordion">
+                    <div class="accordion-item border-secondary rounded-3 mb-3 border">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed rounded-3 fw-semibold bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                <i class="bi bi-shield-check me-2 text-primary"></i>System Maintenance & Database Recovery
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+                            <div class="accordion-body text-muted">
+                                <strong>Your data is safe.</strong> This POS system automatically backs up your entire database every single night at 11:59 PM. 
+                                <br><br>
+                                If your system suddenly stops working or data goes missing, please navigate to the <strong>Backups</strong> tab in the sidebar to securely restore the system to a previous working state. If you cannot log in, contact support immediately for a manual AppData recovery.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item border-secondary rounded-3 border">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed rounded-3 fw-semibold bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                <i class="bi bi-info-circle me-2 text-info"></i>System Version Info
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+                            <div class="accordion-body text-muted">
+                                POS Inventory System v1.0.0 Desktop Edition<br>
+                                Powered by Node.js, SQLite, and Electron.<br>
+                                Licensed to <strong><%= shopName %></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

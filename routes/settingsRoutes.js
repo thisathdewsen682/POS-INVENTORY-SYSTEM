@@ -9,7 +9,8 @@ const { requireRole } = require('../middlewares/roleMiddleware');
 // Multer setup for logo upload
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, path.join(__dirname, '..', 'public', 'uploads'));
+        const dest = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads');
+        cb(null, dest);
     },
     filename: function(req, file, cb) {
         const ext = path.extname(file.originalname);
