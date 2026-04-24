@@ -7,7 +7,7 @@ class UserModel {
     }
 
     static findById(id) {
-        return db.prepare('SELECT id, username, role, permissions FROM users WHERE id = ?').get(id);
+        return db.prepare('SELECT id, username, role, permissions, is_active FROM users WHERE id = ?').get(id);
     }
 
     static create({ username, password, role, permissions }) {
@@ -18,7 +18,7 @@ class UserModel {
     }
 
     static getAll() {
-        return db.prepare('SELECT id, username, role, permissions FROM users').all();
+        return db.prepare('SELECT id, username, role, permissions, is_active FROM users').all();
     }
 
     static update(id, { role, permissions }) {
@@ -38,6 +38,10 @@ class UserModel {
             throw new Error('Cannot delete user with existing sales records. Deactivate instead.');
         }
         db.prepare('DELETE FROM users WHERE id = ?').run(id);
+    }
+
+    static toggleStatus(id) {
+        db.prepare('UPDATE users SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?').run(id);
     }
 }
 

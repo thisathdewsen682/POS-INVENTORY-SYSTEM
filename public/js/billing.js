@@ -1,207 +1,121 @@
-// Billing Cart Logic — jQuery
-// This file must load AFTER jQuery (in footer.ejs)
+// billing.js - Handles cart logic for multi-item sales, per-item and total discount
 
-let cart = [];
+document.addEventListener("DOMContentLoaded", function () {
+  let cart = [];
 
-$(document).ready(function() {
-    
-    // --- Product Search ---
-    $('#search-product').on('input', function() {
-        const query = $(this).val().toLowerCase();
-        $('.product-card-container').each(function() {
-            const name = $(this).data('name');
-            const category = $(this).data('category');
-            if (name.indexOf(query) !== -1 || category.indexOf(query) !== -1) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
+  function renderCart() {
+    const cartItemsDiv = document.getElementById("cart-items");
+    if (cart.length === 0) {
+      cartItemsDiv.innerHTML = '<div class="text-muted">Cart is empty.</div>';
+      return;
+    }
+    let html = `<table class="table table-bordered"><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Remove</th></tr></thead><tbody>`;
+    cart.forEach((item, idx) => {
+      const subtotal = (item.price * item.quantity).toFixed(2);
+      html += `<tr>
+        <td>${idx + 1}</td>
+        <td>${item.name}</td>
+        <td><input type="number" class="form-control form-control-sm" name="items[${idx}][quantity]" value="${item.quantity}" min="1" required></td>
+        <td><input type="number" class="form-control form-control-sm" name="items[${idx}][price]" value="${item.price}" step="0.01" required></td>
+        <td>${subtotal}</td>
+        <td><button type="button" class="btn btn-danger btn-sm remove-item" data-idx="${idx}">Remove</button></td>
+      </tr>`;
     });
+    html += "</tbody></table>";
+    cartItemsDiv.innerHTML = html;
+  }
 
-    // --- Bill-level discount ---
-    $('#bill-discount').on('input', recalcTotals);
-    $('#bill-discount-type').on('change', recalcTotals);
-    
-    // --- Checkout ---
-    $('#checkout-btn').on('click', function() {
-        if (cart.length === 0) return;
-        
-        const subtotal = calculateSubtotal();
-        const billDiscountVal = parseFloat($('#bill-discount').val()) || 0;
-        const billDiscountType = $('#bill-discount-type').val();
-        let billDiscount = billDiscountType === 'percent' ? (subtotal * billDiscountVal / 100) : billDiscountVal;
-        if (billDiscount < 0) billDiscount = 0;
-        const total = Math.max(subtotal - billDiscount, 0);
+  // Use price, quantity, and discount fields for add-to-cart
+  const productSelect = document.getElementById("product-select");
+  const addQtyInput = document.getElementById("add-qty");
+  const addPriceInput = document.getElementById("add-price");
+  // Auto-fill price field when product is selected
+  productSelect.addEventListener("change", function () {
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    const price =
+      selectedOption && selectedOption.value
+        ? selectedOption.getAttribute("data-price")
+        : "";
+    addPriceInput.value = price;
+  });
 
-        $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+  // Also update price if page loads with a product selected
+  if (productSelect.value) {
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    addPriceInput.value = selectedOption.getAttribute("data-price") || "";
+  }
 
-        // Build items for server
-        const items = cart.map(item => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            discount: item.itemDiscount,
-            total: item.total
-        }));
+  // Add item from product select
+  document.getElementById("add-item").addEventListener("click", function () {
+    const select = productSelect;
+    const selectedOption = select.options[select.selectedIndex];
+    const productId = selectedOption.value;
+    if (!productId) {
+      alert("Select a product");
+      return;
+    }
+    const name = selectedOption.getAttribute("data-name");
+    const price = parseFloat(addPriceInput.value);
+    const stock = parseInt(selectedOption.getAttribute("data-stock"), 10);
+    const quantity = parseInt(addQtyInput.value, 10);
+    // No discount field
+    if (isNaN(quantity) || quantity < 1) {
+      alert("Invalid quantity");
+      return;
+    }
+    if (quantity > stock) {
+      alert("Not enough stock");
+      return;
+    }
+    cart.push({ product_id: productId, name, price, quantity });
+    renderCart();
+    // Reset add-to-cart fields
+    addQtyInput.value = "";
+    addPriceInput.value = "";
+  });
 
-        $.ajax({
-            url: '/billing/checkout',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                items: items,
-                subtotal: subtotal,
-                discount: billDiscount,
-                discount_type: billDiscountType,
-                total: total
-            }),
-            success: function(response) {
-                if (response.success) {
-                    window.open('/invoices/print/' + response.saleId, '_blank');
-                    cart = [];
-                    renderCart();
-                    $('#bill-discount').val(0);
-                } else {
-                    alert('Error: ' + response.message);
-                }
-                $('#checkout-btn').prop('disabled', false).text('Checkout & Print');
-            },
-            error: function(xhr) {
-                alert('Request failed: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.statusText));
-                $('#checkout-btn').prop('disabled', false).text('Checkout & Print');
-            }
+  // Remove item (event delegation)
+  document.getElementById("cart-items").addEventListener("click", function (e) {
+    if (e.target && e.target.classList.contains("remove-item")) {
+      const idx = parseInt(e.target.getAttribute("data-idx"), 10);
+      cart.splice(idx, 1);
+      renderCart();
+    }
+  });
+
+  // On form submit, update cart values from inputs and submit via AJAX
+  document
+    .getElementById("billing-form")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      // Update cart from table inputs
+      const cartItemsDiv = document.getElementById("cart-items");
+      const rows = cartItemsDiv.querySelectorAll("tbody tr");
+      rows.forEach((row, i) => {
+        const qtyInput = row.querySelector('input[name$="[quantity]"]');
+        const priceInput = row.querySelector('input[name$="[price]"]');
+        cart[i].quantity = parseInt(qtyInput.value, 10);
+        cart[i].price = parseFloat(priceInput.value);
+      });
+      // Prepare form data
+      const formData = new FormData(this);
+      formData.set("cart", JSON.stringify(cart));
+      // Send AJAX request
+      fetch("/sales/create", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success && data.saleId) {
+            // Redirect to invoice page for printing
+            window.location.href = "/sales/invoice/" + data.saleId;
+          } else {
+            alert(data.message || "Sale failed.");
+          }
+        })
+        .catch(() => {
+          alert("Sale failed.");
         });
     });
 });
-
-// --- Add to cart (called from onclick) ---
-window.addToCart = function(id, name, price, maxStock) {
-    if (maxStock <= 0) {
-        alert('Item is out of stock!');
-        return;
-    }
-    const existing = cart.find(function(item) { return item.product_id === id; });
-    if (existing) {
-        if (existing.quantity >= maxStock) {
-            alert('Cannot exceed available stock (' + maxStock + ')');
-            return;
-        }
-        existing.quantity += 1;
-        existing.total = (existing.quantity * existing.price) - existing.itemDiscount;
-    } else {
-        cart.push({
-            product_id: id,
-            name: name,
-            price: price,
-            quantity: 1,
-            maxStock: maxStock,
-            itemDiscount: 0,
-            total: price
-        });
-    }
-    renderCart();
-};
-
-// --- Update quantity ---
-window.updateQty = function(index, newQty) {
-    var qty = parseInt(newQty, 10);
-    var item = cart[index];
-    if (isNaN(qty) || qty < 1) {
-        $('#qty-' + index).val(item.quantity);
-        return;
-    }
-    if (qty > item.maxStock) {
-        alert('Stock limit: ' + item.maxStock);
-        qty = item.maxStock;
-        $('#qty-' + index).val(qty);
-    }
-    item.quantity = qty;
-    item.total = (item.quantity * item.price) - item.itemDiscount;
-    if (item.total < 0) item.total = 0;
-    renderCart();
-};
-
-// --- Update item discount ---
-window.updateItemDiscount = function(index, val) {
-    var disc = parseFloat(val) || 0;
-    if (disc < 0) disc = 0;
-    var item = cart[index];
-    item.itemDiscount = disc;
-    item.total = (item.quantity * item.price) - disc;
-    if (item.total < 0) item.total = 0;
-    renderCart();
-};
-
-// --- Remove item ---
-window.removeItem = function(index) {
-    cart.splice(index, 1);
-    renderCart();
-};
-
-// --- Subtotal ---
-function calculateSubtotal() {
-    var sum = 0;
-    for (var i = 0; i < cart.length; i++) {
-        sum += cart[i].total;
-    }
-    return sum;
-}
-
-// --- Recalculate totals (displayed) ---
-function recalcTotals() {
-    var subtotal = calculateSubtotal();
-    $('#cart-subtotal').text('$' + subtotal.toFixed(2));
-
-    var billDiscountVal = parseFloat($('#bill-discount').val()) || 0;
-    var billDiscountType = $('#bill-discount-type').val();
-    var billDiscount = billDiscountType === 'percent' ? (subtotal * billDiscountVal / 100) : billDiscountVal;
-    if (billDiscount < 0) billDiscount = 0;
-
-    var total = subtotal - billDiscount;
-    if (total < 0) total = 0;
-
-    $('#cart-total').text('$' + total.toFixed(2));
-    $('#checkout-btn').prop('disabled', cart.length === 0);
-}
-
-// --- Render cart table ---
-function renderCart() {
-    var tbody = $('#cart-body');
-    tbody.empty();
-
-    if (cart.length === 0) {
-        tbody.append('<tr><td colspan="5" class="text-center text-muted py-5"><i class="bi bi-cart-x fs-1 d-block mb-2 opacity-50"></i>Cart is empty</td></tr>');
-        $('#cart-subtotal').text('$0.00');
-        $('#cart-total').text('$0.00');
-        $('#checkout-btn').prop('disabled', true);
-        return;
-    }
-
-    for (var i = 0; i < cart.length; i++) {
-        var item = cart[i];
-        var tr = '<tr>' +
-            '<td>' +
-                '<div class="fw-bold">' + item.name + '</div>' +
-                '<small class="text-muted">$' + item.price.toFixed(2) + ' each</small>' +
-            '</td>' +
-            '<td>' +
-                '<input type="number" id="qty-' + i + '" class="form-control form-control-sm text-center" ' +
-                    'value="' + item.quantity + '" min="1" max="' + item.maxStock + '" ' +
-                    'onchange="updateQty(' + i + ', this.value)" style="width: 70px;">' +
-            '</td>' +
-            '<td>' +
-                '<input type="number" class="form-control form-control-sm text-center" ' +
-                    'value="' + item.itemDiscount.toFixed(2) + '" min="0" step="0.01" ' +
-                    'onchange="updateItemDiscount(' + i + ', this.value)" style="width: 80px;">' +
-            '</td>' +
-            '<td class="text-end fw-bold text-success">$' + item.total.toFixed(2) + '</td>' +
-            '<td class="text-end">' +
-                '<button class="btn btn-sm btn-outline-danger border-0" onclick="removeItem(' + i + ')"><i class="bi bi-x-lg"></i></button>' +
-            '</td>' +
-        '</tr>';
-        tbody.append(tr);
-    }
-
-    recalcTotals();
-}

@@ -1,17 +1,19 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
-const bcrypt = require('bcryptjs');
+const Database = require("better-sqlite3");
+const path = require("path");
+const fs = require("fs");
+const bcrypt = require("bcryptjs");
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'pos_database.sqlite');
+const dbPath =
+  process.env.DB_PATH || path.join(__dirname, "..", "pos_database.sqlite");
 const db = new Database(dbPath);
 
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON");
 
 function initDb() {
-    // Users
-    db.prepare(`
+  // Users
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -19,18 +21,22 @@ function initDb() {
             role TEXT NOT NULL CHECK(role IN ('admin', 'staff')),
             permissions TEXT DEFAULT '[]'
         )
-    `).run();
+    `,
+  ).run();
 
-    // Categories
-    db.prepare(`
+  // Categories
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL
         )
-    `).run();
+    `,
+  ).run();
 
-    // Products
-    db.prepare(`
+  // Products
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -42,10 +48,12 @@ function initDb() {
             remarks TEXT,
             FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
         )
-    `).run();
+    `,
+  ).run();
 
-    // Sales
-    db.prepare(`
+  // Sales
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS sales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             invoice_number TEXT UNIQUE NOT NULL,
@@ -57,10 +65,12 @@ function initDb() {
             total REAL NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
         )
-    `).run();
+    `,
+  ).run();
 
-    // Sale Items
-    db.prepare(`
+  // Sale Items
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS sale_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sale_id INTEGER NOT NULL,
@@ -72,10 +82,12 @@ function initDb() {
             FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
             FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
         )
-    `).run();
+    `,
+  ).run();
 
-    // Stock Logs
-    db.prepare(`
+  // Stock Logs
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS stock_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
@@ -85,46 +97,85 @@ function initDb() {
             reference_id TEXT,
             FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
         )
-    `).run();
+    `,
+  ).run();
 
-    // Settings
-    db.prepare(`
+  // Settings
+  db.prepare(
+    `
         CREATE TABLE IF NOT EXISTS settings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             key TEXT UNIQUE NOT NULL,
             value TEXT DEFAULT ''
         )
-    `).run();
+    `,
+  ).run();
 
-    // ---- Migration: Add columns if missing ----
-    try { db.prepare('ALTER TABLE products ADD COLUMN cost_price REAL DEFAULT 0').run(); } catch(e) {}
-    try { db.prepare('ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT \'[]\'').run(); } catch(e) {}
-    try { db.prepare('ALTER TABLE sale_items ADD COLUMN discount REAL DEFAULT 0').run(); } catch(e) {}
-    try { db.prepare('ALTER TABLE sales ADD COLUMN discount_type TEXT DEFAULT \'flat\'').run(); } catch(e) {}
+  // ---- Migration: Add columns if missing ----
+  try {
+    db.prepare(
+      "ALTER TABLE products ADD COLUMN cost_price REAL DEFAULT 0",
+    ).run();
+  } catch (e) {}
+  try {
+    db.prepare(
+      "ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[]'",
+    ).run();
+  } catch (e) {}
+  try {
+    db.prepare(
+      "ALTER TABLE sale_items ADD COLUMN discount REAL DEFAULT 0",
+    ).run();
+  } catch (e) {}
+  try {
+    db.prepare(
+      "ALTER TABLE sales ADD COLUMN discount_type TEXT DEFAULT 'flat'",
+    ).run();
+  } catch (e) {}
+  try {
+    db.prepare(
+      "ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1",
+    ).run();
+  } catch (e) {}
 
-    // Seed default settings
-    const defaultSettings = {
-        'shop_name': 'Supertech Electronics',
-        'shop_address': '123 Tech Lane, Gadget City, 10001',
-        'shop_phone': '+1 800 555 0199',
-        'invoice_header': 'Thank you for shopping with us!',
-        'invoice_footer': 'Please keep your receipt for warranty purposes.',
-        'logo_path': '',
-        'currency_symbol': '$'
-    };
+  // Seed default settings
+  const defaultSettings = {
+    shop_name: "Supertech Electronics",
+    shop_address: "123 Tech Lane, Gadget City, 10001",
+    shop_phone: "+1 800 555 0199",
+    invoice_header: "Thank you for shopping with us!",
+    invoice_footer: "Please keep your receipt for warranty purposes.",
+    logo_path: "",
+    currency_symbol: "$",
+    auto_backup_time_1: "12:00",
+    auto_backup_time_2: "18:00",
+    cloud_backup_enabled: "0",
+    smtp_host: "smtp.gmail.com",
+    smtp_port: "465",
+    smtp_user: "",
+    smtp_pass: "",
+    backup_email_client: "",
+    backup_email_support: "thisathdwsen77@gmail.com",
+  };
 
-    const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
-    for (const [key, value] of Object.entries(defaultSettings)) {
-        insertSetting.run(key, value);
-    }
+  const insertSetting = db.prepare(
+    "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+  );
+  for (const [key, value] of Object.entries(defaultSettings)) {
+    insertSetting.run(key, value);
+  }
 
-    // Seed default admin user
-    const checkAdmin = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
-    if (!checkAdmin) {
-        const hashedPassword = bcrypt.hashSync('admin123', 10);
-        db.prepare('INSERT INTO users (username, password, role, permissions) VALUES (?, ?, ?, ?)').run('admin', hashedPassword, 'admin', '[]');
-        console.log('[DB] Seeded default admin user (admin / admin123)');
-    }
+  // Seed default admin user
+  const checkAdmin = db
+    .prepare("SELECT id FROM users WHERE username = ?")
+    .get("admin");
+  if (!checkAdmin) {
+    const hashedPassword = bcrypt.hashSync("admin123", 10);
+    db.prepare(
+      "INSERT INTO users (username, password, role, permissions) VALUES (?, ?, ?, ?)",
+    ).run("admin", hashedPassword, "admin", "[]");
+    console.log("[DB] Seeded default admin user (admin / admin123)");
+  }
 }
 
 initDb();

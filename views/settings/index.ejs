@@ -40,7 +40,21 @@
                         </div>
                     </div>
 
-                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2"><i class="bi bi-image me-2"></i>Shop Logo</h5>
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2 mt-4"><i class="bi bi-clock-history me-2"></i>Automated Backups</h5>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Daily Backup Time 1</label>
+                            <input type="time" name="auto_backup_time_1" class="form-control form-control-lg" value="<%= settings.auto_backup_time_1 || '' %>">
+                            <small class="text-muted">Leave blank to disable</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Daily Backup Time 2</label>
+                            <input type="time" name="auto_backup_time_2" class="form-control form-control-lg" value="<%= settings.auto_backup_time_2 || '' %>">
+                            <small class="text-muted">Leave blank to disable</small>
+                        </div>
+                    </div>
+
+                    <h5 class="text-muted mb-3 border-bottom border-secondary pb-2 mt-4"><i class="bi bi-image me-2"></i>Shop Logo</h5>
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
                             <% if (settings.logo_path) { %>
@@ -63,10 +77,136 @@
                         </div>
                     </div>
 
+                    <h5 class="text-white mb-3 border-bottom border-secondary pb-2 mt-4"><i class="bi bi-cloud-upload me-2"></i>Cloud Mirroring (Off-site Backup)</h5>
+                    <div class="card bg-dark border-secondary mb-4">
+                        <div class="card-body p-4">
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" name="cloud_backup_enabled" id="cloudBackupToggle" value="1" <%= settings.cloud_backup_enabled === '1' ? 'checked' : '' %>>
+                                <label class="form-check-label fw-bold" for="cloudBackupToggle">Enable Automated Remote Mirroring</label>
+                                <p class="small text-muted mb-0">Sends a copy of every database backup to your email boxes automatically.</p>
+                            </div>
+
+                            <div id="cloudSettings" class="<%= settings.cloud_backup_enabled === '1' ? '' : 'd-none' %>">
+                                <h6 class="text-info mb-3">SMTP Sender Configuration</h6>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-8">
+                                        <label class="form-label small text-muted">SMTP Host</label>
+                                        <input type="text" id="smtp_host" name="smtp_host" class="form-control form-control-sm" value="<%= settings.smtp_host || 'smtp.gmail.com' %>">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Port</label>
+                                        <input type="number" id="smtp_port" name="smtp_port" class="form-control form-control-sm" value="<%= settings.smtp_port || '465' %>">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Sender Email (User)</label>
+                                        <input type="email" id="smtp_user" name="smtp_user" class="form-control form-control-sm" value="<%= settings.smtp_user || '' %>" placeholder="e.g. your-email@gmail.com">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">App Password</label>
+                                        <input type="password" id="smtp_pass" name="smtp_pass" class="form-control form-control-sm" value="<%= settings.smtp_pass || '' %>" placeholder="••••••••••••••••">
+                                    </div>
+                                </div>
+
+                                <h6 class="text-info mb-3">Recipient Emails</h6>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Shop Owner Email</label>
+                                        <input type="email" id="backup_email_client" name="backup_email_client" class="form-control form-control-sm" value="<%= settings.backup_email_client || '' %>" placeholder="Client inbox">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Support Email (Developer)</label>
+                                        <input type="email" id="backup_email_support" name="backup_email_support" class="form-control form-control-sm" value="<%= settings.backup_email_support || 'thisathdwsen77@gmail.com' %>">
+                                    </div>
+                                </div>
+
+                                <div class="text-center p-3 border border-secondary rounded bg-black">
+                                    <button type="button" id="testEmailBtn" class="btn btn-outline-info btn-sm rounded-pill px-4">
+                                        <i class="bi bi-send-check me-1"></i>Test Connection
+                                    </button>
+                                    <div id="testResult" class="mt-2 small d-none"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top border-secondary">
-                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="bi bi-check-circle me-1"></i>Save Settings</button>
+                        <button type="submit" id="saveSettingsBtn" class="btn btn-primary rounded-pill px-5 shadow-sm">
+                            <span id="saveBtnText"><i class="bi bi-check-circle me-1"></i>Save Settings</span>
+                            <span id="saveBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </form>
+
+                <script>
+                    document.querySelector('form[action="/settings/update"]').addEventListener('submit', function() {
+                        const btn = document.getElementById('saveSettingsBtn');
+                        const text = document.getElementById('saveBtnText');
+                        const spinner = document.getElementById('saveBtnSpinner');
+                        
+                        btn.disabled = true;
+                        text.classList.add('d-none');
+                        spinner.classList.remove('d-none');
+                    });
+
+                    // Toggle visibility of cloud settings
+                    document.getElementById('cloudBackupToggle').addEventListener('change', function() {
+                        const settingsDiv = document.getElementById('cloudSettings');
+                        if (this.checked) {
+                            settingsDiv.classList.remove('d-none');
+                        } else {
+                            settingsDiv.classList.add('d-none');
+                        }
+                    });
+
+                    // Handle Test Email
+                    document.getElementById('testEmailBtn').addEventListener('click', async function() {
+                        const btn = this;
+                        const resultDiv = document.getElementById('testResult');
+                        
+                        const data = {
+                            smtp_host: document.getElementById('smtp_host').value,
+                            smtp_port: document.getElementById('smtp_port').value,
+                            smtp_user: document.getElementById('smtp_user').value,
+                            smtp_pass: document.getElementById('smtp_pass').value,
+                            backup_email_client: document.getElementById('backup_email_client').value,
+                            backup_email_support: document.getElementById('backup_email_support').value
+                        };
+
+                        if (!data.smtp_user || !data.smtp_pass) {
+                            alert('Please enter SMTP user and password first.');
+                            return;
+                        }
+
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Testing...';
+                        resultDiv.classList.add('d-none');
+
+                        try {
+                            const response = await fetch('/settings/test-email', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(data)
+                            });
+                            const result = await response.json();
+                            
+                            resultDiv.classList.remove('d-none');
+                            if (result.success) {
+                                resultDiv.className = 'mt-2 small text-success';
+                                resultDiv.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>' + result.message;
+                            } else {
+                                resultDiv.className = 'mt-2 small text-danger';
+                                resultDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Error: ' + result.error;
+                            }
+                        } catch (e) {
+                            resultDiv.classList.remove('d-none');
+                            resultDiv.className = 'mt-2 small text-danger';
+                            resultDiv.innerHTML = 'Network error occurred.';
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-send-check me-1"></i>Test Connection';
+                        }
+                    });
+                </script>
             </div>
         </div>
     </div>

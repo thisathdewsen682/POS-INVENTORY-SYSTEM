@@ -2,10 +2,41 @@
   "name": "pos-inventory-system",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "electron:start": "electron .",
+    "electron:build": "electron-builder --win",
+    "electron:fix": "electron-builder install-app-deps",
+    "preelectron:build": "npm run electron:fix"
+  },
+  "build": {
+    "appId": "com.supertech.pos",
+    "productName": "POS System",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "asar": true,
+    "files": [
+      "**/*",
+      "!dist/*",
+      "!backups/*",
+      "!pos_database.sqlite*",
+      "!sessions.sqlite",
+      "!.env*"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -18,9 +49,14 @@
     "ejs": "^5.0.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "multer": "^2.1.1"
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "nodemon": "^3.1.14",
+    "wait-on": "^9.0.5"
   }
 }

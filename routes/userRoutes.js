@@ -13,5 +13,6 @@ router.post('/create', UserController.postCreate);
 router.get('/edit/:id', UserController.getEdit);
 router.post('/edit/:id', UserController.postEdit);
 router.post('/delete/:id', UserController.postDelete);
+router.post('/toggle-status/:id', UserController.postToggleStatus);
 
 module.exports = router;

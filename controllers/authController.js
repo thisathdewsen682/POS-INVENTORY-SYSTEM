@@ -15,6 +15,10 @@ class AuthController {
             return res.render('auth/login', { title: 'Login', error: 'Invalid username or password' });
         }
 
+        if (user.is_active === 0) {
+            return res.render('auth/login', { title: 'Login', error: 'Your account has been deactivated. Please contact an admin.' });
+        }
+
         // Store permissions in session
         req.session.user = {
             id: user.id,
