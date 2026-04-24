@@ -34,5 +34,6 @@ router.use(requireRole('admin'));
 router.get('/', SettingsController.getIndex);
 router.post('/update', upload.single('logo'), SettingsController.postUpdate);
 router.post('/remove-logo', SettingsController.postRemoveLogo);
+router.post('/test-email', SettingsController.postTestEmail);
 
 module.exports = router;

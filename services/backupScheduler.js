@@ -3,6 +3,7 @@ const db = require('../config/database');
 const path = require('path');
 const fs = require('fs');
 const SettingsModel = require('../models/settingsModel');
+const EmailService = require('./emailService');
 
 class BackupScheduler {
     static jobs = [];
@@ -42,7 +43,11 @@ class BackupScheduler {
             const backupFile = path.join(backupsDir, `backup_${dateStr}_${timeStrSafe}.sqlite`);
             
             db.backup(backupFile)
-                .then(() => console.log(`[BACKUP] Successfully created ${backupFile}`))
+                .then(() => {
+                    console.log(`[BACKUP] Successfully created ${backupFile}`);
+                    // Trigger cloud mirroring
+                    EmailService.sendBackup(backupFile);
+                })
                 .catch(err => console.error('[BACKUP] Scheduled backup failed!', err));
         });
 

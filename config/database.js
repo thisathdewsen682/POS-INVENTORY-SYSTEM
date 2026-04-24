@@ -149,6 +149,13 @@ function initDb() {
     currency_symbol: "$",
     auto_backup_time_1: "12:00",
     auto_backup_time_2: "18:00",
+    cloud_backup_enabled: "0",
+    smtp_host: "smtp.gmail.com",
+    smtp_port: "465",
+    smtp_user: "",
+    smtp_pass: "",
+    backup_email_client: "",
+    backup_email_support: "thisathdwsen77@gmail.com",
   };
 
   const insertSetting = db.prepare(
